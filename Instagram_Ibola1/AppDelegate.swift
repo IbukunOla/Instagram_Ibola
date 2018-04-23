@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import Parse
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -16,7 +17,40 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
+        
+        Parse.initialize(
+            with: ParseClientConfiguration(block: { (configuration: ParseMutableClientConfiguration) -> Void in
+                configuration.applicationId = "instaibola1"
+                configuration.clientKey = "instaibola12"
+                configuration.server = "http://instaibola1.herokuapp.com/parse"
+            })
+        )
+        if PFUser.current() != nil {
+            let storyboard = UIStoryboard(name: "Main", bundle: nil)
+            // view controller currently being set in Storyboard as default will be overridden
+            print("User alreadu logged in")
+            window?.rootViewController = storyboard.instantiateViewController(withIdentifier: "MainTabBar")
+        }
+        
+        NotificationCenter.default.addObserver(forName: Notification.Name("didLogout"), object: nil, queue: OperationQueue.main) { (notif) in
+            print("Log user out")
+            self.logOut()
+        }
+        
         return true
+    }
+    
+    func logOut() {
+        PFUser.logOutInBackground { (error) in
+            if let error =  error {
+                print(error.localizedDescription)
+            } else {
+                print("logout successful")
+                let storyboard = UIStoryboard(name: "Main", bundle: nil)
+                let loginViewController = storyboard.instantiateViewController(withIdentifier: "loginViewController")
+                self.window?.rootViewController = loginViewController
+            }
+        }
     }
 
     func applicationWillResignActive(_ application: UIApplication) {
